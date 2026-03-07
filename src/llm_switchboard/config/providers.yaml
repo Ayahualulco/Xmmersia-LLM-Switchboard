@@ -1,0 +1,208 @@
+# LLM-Switchboard Provider Configuration
+# ========================================
+# Status page URLs, supported models, and metadata for each provider.
+# This file is the single source of truth for provider information.
+
+providers:
+  anthropic:
+    name: Anthropic
+    status_page_url: "https://status.anthropic.com"
+    status_api_url: "https://status.anthropic.com/api/v2/summary.json"
+    api_base_url: "https://api.anthropic.com"
+    api_key_env: "ANTHROPIC_API_KEY"
+    models:
+      - id: "claude-opus-4-6"
+        name: "Claude Opus 4.6"
+        capabilities: [reasoning, coding, analysis, creative, math, vision]
+        tier: flagship
+        context_window: 200000
+      - id: "claude-sonnet-4-6"
+        name: "Claude Sonnet 4.6"
+        capabilities: [reasoning, coding, analysis, creative, math, vision]
+        tier: balanced
+        context_window: 200000
+      - id: "claude-haiku-4-5"
+        name: "Claude Haiku 4.5"
+        capabilities: [reasoning, coding, analysis, creative, math]
+        tier: fast
+        context_window: 200000
+
+  openai:
+    name: OpenAI
+    status_page_url: "https://status.openai.com"
+    status_api_url: "https://status.openai.com/api/v2/summary.json"
+    api_base_url: "https://api.openai.com"
+    api_key_env: "OPENAI_API_KEY"
+    models:
+      - id: "gpt-4o"
+        name: "GPT-4o"
+        capabilities: [reasoning, coding, analysis, creative, math, vision]
+        tier: flagship
+        context_window: 128000
+      - id: "gpt-4.5-preview"
+        name: "GPT-4.5 Preview"
+        capabilities: [reasoning, coding, analysis, creative, math, vision]
+        tier: flagship
+        context_window: 128000
+      - id: "o3"
+        name: "o3"
+        capabilities: [reasoning, coding, math, analysis]
+        tier: reasoning
+        context_window: 200000
+      - id: "o4-mini"
+        name: "o4-mini"
+        capabilities: [reasoning, coding, math]
+        tier: reasoning_fast
+        context_window: 200000
+
+  google:
+    name: Google
+    status_page_url: "https://status.cloud.google.com"
+    status_api_url: "https://status.cloud.google.com/summary.json"
+    api_base_url: "https://generativelanguage.googleapis.com"
+    api_key_env: "GOOGLE_API_KEY"
+    models:
+      - id: "gemini-2.0-pro"
+        name: "Gemini 2.0 Pro"
+        capabilities: [reasoning, coding, analysis, creative, math, vision]
+        tier: flagship
+        context_window: 2000000
+      - id: "gemini-2.0-flash"
+        name: "Gemini 2.0 Flash"
+        capabilities: [reasoning, coding, analysis, creative, math, vision]
+        tier: fast
+        context_window: 1000000
+
+  mistral:
+    name: Mistral
+    status_page_url: "https://status.mistral.ai"
+    status_api_url: "https://status.mistral.ai/api/v2/summary.json"
+    api_base_url: "https://api.mistral.ai"
+    api_key_env: "MISTRAL_API_KEY"
+    models:
+      - id: "mistral-large-latest"
+        name: "Mistral Large"
+        capabilities: [reasoning, coding, analysis, creative, math]
+        tier: flagship
+        context_window: 128000
+      - id: "mistral-medium-latest"
+        name: "Mistral Medium"
+        capabilities: [reasoning, coding, analysis, creative]
+        tier: balanced
+        context_window: 128000
+      - id: "mistral-small-latest"
+        name: "Mistral Small"
+        capabilities: [reasoning, coding, analysis]
+        tier: fast
+        context_window: 128000
+
+  xai:
+    name: xAI
+    status_page_url: "https://status.x.ai"
+    status_api_url: null  # xAI uses a custom status page format (not Atlassian Statuspage)
+    api_base_url: "https://api.x.ai"
+    api_key_env: "XAI_API_KEY"
+    notes: "OpenAI-compatible API. Base URL: https://api.x.ai/v1. Auth: Bearer token."
+    models:
+      - id: "grok-4"
+        name: "Grok 4"
+        capabilities: [reasoning, coding, analysis, creative, math, vision]
+        tier: reasoning
+        context_window: 256000
+      - id: "grok-3"
+        name: "Grok 3"
+        capabilities: [reasoning, coding, analysis, creative, math]
+        tier: flagship
+        context_window: 131072
+      - id: "grok-3-mini"
+        name: "Grok 3 Mini"
+        capabilities: [reasoning, coding, analysis, math]
+        tier: reasoning_fast
+        context_window: 131072
+      - id: "grok-2-1212"
+        name: "Grok 2"
+        capabilities: [reasoning, coding, analysis, creative]
+        tier: balanced
+        context_window: 131072
+
+  cohere:
+    name: Cohere
+    status_page_url: "https://status.cohere.com"
+    status_api_url: "https://status.cohere.com/api/v2/summary.json"
+    api_base_url: "https://api.cohere.com"
+    api_key_env: "COHERE_API_KEY"
+    models:
+      - id: "command-r-plus"
+        name: "Command R+"
+        capabilities: [reasoning, analysis, creative, rag]
+        tier: flagship
+        context_window: 128000
+      - id: "command-r"
+        name: "Command R"
+        capabilities: [reasoning, analysis, rag]
+        tier: balanced
+        context_window: 128000
+
+  groq:
+    name: Groq
+    status_page_url: "https://status.groq.com"
+    status_api_url: "https://status.groq.com/api/v2/summary.json"
+    api_base_url: "https://api.groq.com"
+    api_key_env: "GROQ_API_KEY"
+    models:
+      - id: "llama-3.3-70b"
+        name: "LLaMA 3.3 70B"
+        capabilities: [reasoning, coding, analysis]
+        tier: balanced
+        context_window: 131072
+      - id: "mixtral-8x7b"
+        name: "Mixtral 8x7B"
+        capabilities: [reasoning, coding, analysis]
+        tier: fast
+        context_window: 32768
+
+  together:
+    name: Together AI
+    status_page_url: "https://status.together.ai"
+    status_api_url: "https://status.together.ai/api/v2/summary.json"
+    api_base_url: "https://api.together.xyz"
+    api_key_env: "TOGETHER_API_KEY"
+    models:
+      - id: "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo"
+        name: "LLaMA 3.1 405B"
+        capabilities: [reasoning, coding, analysis, creative, math]
+        tier: flagship
+        context_window: 131072
+
+  bedrock:
+    name: AWS Bedrock
+    status_page_url: "https://health.aws.amazon.com"
+    status_api_url: null  # AWS uses a different health format
+    api_base_url: null  # Uses boto3, not direct HTTP
+    api_key_env: null  # Uses AWS credentials chain
+    models:
+      - id: "anthropic.claude-v2"
+        name: "Claude v2 (Bedrock)"
+        capabilities: [reasoning, coding, analysis, creative]
+        tier: balanced
+        context_window: 100000
+
+# Health scoring configuration
+health:
+  polling_interval_seconds: 60
+  cache_ttl_seconds: 30
+  status_page_weight: 0.6
+  probe_weight: 0.3
+  community_weight: 0.1
+  degraded_threshold: 0.7    # Below this → degraded
+  down_threshold: 0.3        # Below this → down
+
+# Model equivalence — capability-aware substitution scoring
+# Higher score = better substitute
+equivalence:
+  tiers:
+    flagship: [flagship]                          # Only swap flagship for flagship
+    balanced: [balanced, flagship]                # balanced can use flagship as fallback
+    fast: [fast, balanced]                        # fast can use balanced
+    reasoning: [reasoning, flagship]              # reasoning models prefer reasoning tier
+    reasoning_fast: [reasoning_fast, reasoning]   # fast reasoning prefers full reasoning

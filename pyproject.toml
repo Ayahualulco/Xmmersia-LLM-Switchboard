@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm-switchboard"
+version = "1.0.0"
+description = "Proactive LLM health intelligence, routing, and provenance stamping."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Xmmersia", email = "contact@xmmersia.com"}
+]
+keywords = ["llm", "health", "routing", "provenance", "ai", "agents", "switchboard"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "httpx>=0.25.0",
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+api = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+]
+cli = [
+    "click>=8.1.0",
+    "rich>=13.0.0",
+]
+probing = [
+    "anthropic>=0.40.0",
+    "openai>=1.50.0",
+    "google-generativeai>=0.8.0",
+]
+all = [
+    "llm-switchboard[api,cli,probing]",
+]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "respx>=0.21.0",
+    "ruff>=0.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Ayahualulco/Xmmersia-LLM-Switchboard"
+Documentation = "https://github.com/Ayahualulco/Xmmersia-LLM-Switchboard/tree/main/docs"
+Repository = "https://github.com/Ayahualulco/Xmmersia-LLM-Switchboard"
+Issues = "https://github.com/Ayahualulco/Xmmersia-LLM-Switchboard/issues"
+
+[project.scripts]
+switchboard = "llm_switchboard.cli.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
