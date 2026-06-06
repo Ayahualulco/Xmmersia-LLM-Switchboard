@@ -102,7 +102,7 @@ class Stamper:
     backends in future versions).
     """
 
-    VERSION = "1.0.0"
+    VERSION = "1.0.1"
 
     def __init__(self, storage_enabled: bool = True):
         self._storage_enabled = storage_enabled

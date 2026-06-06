@@ -86,7 +86,7 @@ class TestStatusEndpoint:
         response = client.get("/status")
         assert response.status_code == 200
         data = response.json()
-        assert data["switchboard_version"] == "1.0.0"
+        assert data["switchboard_version"] == "1.0.1"
         assert "health_summary" in data
 
 

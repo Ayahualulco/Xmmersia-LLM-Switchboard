@@ -124,6 +124,11 @@ providers:
         capabilities: [reasoning, coding, analysis, creative]
         tier: balanced
         context_window: 131072
+      - id: "grok-build-0.1"
+        name: "Grok Build 0.1"
+        capabilities: [reasoning, coding, vision]
+        tier: reasoning_fast
+        context_window: 256000
 
   cohere:
     name: Cohere
