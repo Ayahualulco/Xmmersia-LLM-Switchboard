@@ -129,6 +129,7 @@ providers:
         capabilities: [reasoning, coding, vision]
         tier: reasoning_fast
         context_window: 256000
+        trust_tier: watched   # manually assigned; score-based derivation deferred (L'Atelier llm-switchboard §05)
 
   cohere:
     name: Cohere

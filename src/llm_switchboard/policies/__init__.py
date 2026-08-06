@@ -23,6 +23,9 @@ FAST: dict = {
     "on_down": "reroute",
     "min_status": "degraded",    # Accept degraded models as fallback
     "acceptable_models": [],     # Empty = try all known models
+    "learner_facing": True,      # Trust gate: untrusted models refused unless a
+                                 # caller explicitly sets this False (e.g. internal
+                                 # tooling, not a student-facing chatbot/tutor).
 }
 
 

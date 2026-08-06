@@ -19,6 +19,7 @@ Every piece of work generated through Switchboard gets a metadata stamp recordin
     "reason": "Primary model degraded during Anthropic minor outage",
     "confidence_flag": "review_recommended",
     "health_snapshot_id": "snap_abc123",
+    "trust_tier_at_call": "trusted",
     "metadata": {}
 }
 ```
@@ -55,6 +56,13 @@ How much trust to place in the output:
 
 ### health_snapshot_id
 Links to a stored health snapshot with detailed signal data. Use `GET /stamp/{stamp_id}` to retrieve.
+
+### trust_tier_at_call
+Trust tier of the model **actually used** — `trusted`, `watched`, or `untrusted`. On a reroute this describes the substitute, not the model originally requested, since the substitute is what produced the output.
+
+Health records whether the model was *up*; this records whether it was *proven*. Reviewing a graded exam months later, both matter: a `watched` tier on a high-stakes output is a flag even when every provider was operational. See [policies.md](policies.md) for which tiers each policy admits.
+
+Defaults to `trusted` when a stamp is generated outside routing, and when reading older stamps written before this field existed.
 
 ### metadata
 Caller-defined extra data. Attach anything relevant: student ID, task type, course section, etc.

@@ -148,17 +148,47 @@ Policies define what to do when a model is degraded or down. The key insight: **
 ### Decision Flow
 
 ```
+0. Trust gate (see §5) → refuse outright, or fall through
 1. Assess model health → HealthAssessment
 2. Classify status (healthy / degraded / down)
 3. Look up policy action for that status
 4. If rerouting: find best alternative via equivalence scoring
+                 (candidates filtered by the same trust gate)
 5. If all alternatives exhausted: stop
 6. Return RoutingResult with action + reason
 ```
 
 ---
 
-## 5. Model Equivalence
+## 5. Trust Tier Gate
+
+The health matrix answers "is this model *up*?" It cannot answer "is this model *proven*?" Those are different questions, and for graded work the second one matters more. A model can report perfectly operational and still be the wrong thing to hand a student's exam to.
+
+So Switchboard runs a trust gate **before** the operational health matrix. **Honesty before uptime.** A model refused on trust is never health-checked at all — it is excluded on what it is, not on how it happens to be behaving right now.
+
+### Gate Table (L'Atelier llm-switchboard §06)
+
+| Trust tier | FAST (learner-facing) | FAST (internal) | CAREFUL | CRITICAL |
+|-----------|----------------------|-----------------|---------|----------|
+| **trusted** | Allowed | Allowed | Allowed | Allowed |
+| **watched** | Allowed | Allowed | Allowed | **Refused** |
+| **untrusted** | **Refused** | Allowed | **Refused** | **Refused** |
+
+A refused model reroutes to a trust-eligible alternative, or stops if none exists. `_find_alternative` applies the same gate to every candidate, so a health-triggered reroute cannot land on a model the policy would have refused directly.
+
+Only `criticality: "critical"` triggers the CRITICAL-tier refusal. `criticality: "high"` maps to no built-in preset, and widening the gate to cover it silently would surprise custom-policy authors.
+
+An unrecognized `trust_tier` value is treated as `untrusted` and logged. The refusal reason records the tier as actually configured, not the normalized value — provenance should show the real bad data.
+
+### Scope in This Repository
+
+Tiers here are **static**: assigned by hand in `providers.yaml`, read by the Router. The L'Atelier `llm-switchboard` document derives them from a weighted trust score (hallucination benchmarks, fabrication tests, production telemetry) on a refresh cadence. That derivation is deliberately deferred; none of its machinery exists in this codebase.
+
+**The L'Atelier `llm-switchboard` document, §05 (Trust Tier) and §06 (Trust Tier Gate), is the source of truth.** This section summarizes it and defers to it on every point of conflict.
+
+---
+
+## 6. Model Equivalence
 
 When rerouting, Switchboard needs to pick the best alternative. Naive approaches (random, round-robin) ignore that models differ in capabilities, quality tiers, and context windows.
 
@@ -187,7 +217,7 @@ This ensures that a flagship model reroutes to another flagship (score 1.0) befo
 
 ---
 
-## 6. Provenance Stamps
+## 7. Provenance Stamps
 
 Every routing decision produces a self-contained provenance stamp.
 
@@ -208,6 +238,7 @@ Every routing decision produces a self-contained provenance stamp.
     "reason": "Primary model degraded; rerouted to gpt-4o (match score: 0.87)",
     "confidence_flag": "review_recommended",
     "health_snapshot_id": "snap_789abc",
+    "trust_tier_at_call": "trusted",
     "metadata": {}
 }
 ```
@@ -230,7 +261,7 @@ In education (Xmmersia's domain), provenance is not optional:
 
 ---
 
-## 7. Provider Adapters
+## 8. Provider Adapters
 
 Each provider implements a simple adapter interface:
 
@@ -266,7 +297,7 @@ See [docs/providers.md](docs/providers.md) for the full guide.
 
 ---
 
-## 8. Caching
+## 9. Caching
 
 The `HealthCache` is a thread-safe, TTL-based in-memory cache that prevents hammering status pages.
 
@@ -286,7 +317,7 @@ Redis/Memcached support is planned for multi-instance deployments in a future ve
 
 ---
 
-## 9. Interfaces
+## 10. Interfaces
 
 ### Python API
 
@@ -324,7 +355,7 @@ switchboard config             — Configuration (v1.1)
 
 ---
 
-## 10. Xmmersia Context
+## 11. Xmmersia Context
 
 Switchboard was built for the **Rozafa Hub** — Xmmersia's infrastructure layer for AI-powered education. In this context:
 
@@ -336,7 +367,7 @@ But Switchboard itself is general-purpose. It has no Xmmersia-specific code, no 
 
 ---
 
-## 11. Future Work
+## 12. Future Work
 
 | Feature | Version | Description |
 |---------|---------|-------------|
@@ -351,7 +382,7 @@ But Switchboard itself is general-purpose. It has no Xmmersia-specific code, no 
 
 ---
 
-## 12. Non-Goals
+## 13. Non-Goals
 
 Things Switchboard intentionally does not do:
 

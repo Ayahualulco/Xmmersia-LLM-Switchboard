@@ -55,6 +55,7 @@ class ProvenanceStamp:
     reason: str
     confidence_flag: ConfidenceFlag
     health_snapshot_id: str                 # Links to stored health data
+    trust_tier_at_call: str = "trusted"     # Trust tier of the model actually used
     metadata: dict = field(default_factory=dict)  # Caller can attach extra info
 
     def to_dict(self) -> dict:
@@ -70,6 +71,7 @@ class ProvenanceStamp:
             "reason": self.reason,
             "confidence_flag": self.confidence_flag.value,
             "health_snapshot_id": self.health_snapshot_id,
+            "trust_tier_at_call": self.trust_tier_at_call,
             "metadata": self.metadata,
         }
 
@@ -87,6 +89,7 @@ class ProvenanceStamp:
             reason=data["reason"],
             confidence_flag=ConfidenceFlag(data["confidence_flag"]),
             health_snapshot_id=data["health_snapshot_id"],
+            trust_tier_at_call=data.get("trust_tier_at_call", "trusted"),
             metadata=data.get("metadata", {}),
         )
 
@@ -118,6 +121,7 @@ class Stamper:
         provider_statuses: dict[str, str] | None = None,
         health_snapshot: dict | None = None,
         metadata: dict | None = None,
+        trust_tier_at_call: str = "trusted",
     ) -> ProvenanceStamp:
         """
         Generate a provenance stamp.
@@ -130,6 +134,7 @@ class Stamper:
             provider_statuses: Optional dict of provider → status at call time.
             health_snapshot: Optional full health data to store.
             metadata: Optional extra info to attach.
+            trust_tier_at_call: Trust tier of the model actually used.
 
         Returns:
             A ProvenanceStamp that should be attached to the output.
@@ -149,6 +154,7 @@ class Stamper:
             reason=reason,
             confidence_flag=confidence,
             health_snapshot_id=snapshot_id,
+            trust_tier_at_call=trust_tier_at_call,
             metadata=metadata or {},
         )
 

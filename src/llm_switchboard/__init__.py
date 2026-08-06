@@ -68,7 +68,7 @@ class Switchboard:
     and it tells you. What you do with that information is up to your policy.
     """
 
-    VERSION = "1.0.1"
+    VERSION = "1.1.0"
 
     def __init__(
         self,
@@ -161,12 +161,16 @@ class Switchboard:
             prompt=prompt,
         )
 
+        routed_info = self._registry.get(result.routed_to)
+        trust_tier_at_call = routed_info.trust_tier if routed_info else "trusted"
+
         # Attach provenance data to the result
         result.provenance = self.stamp(
             model_requested=preferred_model,
             model_used=result.routed_to,
             action_taken=result.action,
             reason=result.reason,
+            trust_tier_at_call=trust_tier_at_call,
         ).to_dict()
 
         return result
@@ -178,6 +182,7 @@ class Switchboard:
         action_taken: str,
         reason: str,
         metadata: dict | None = None,
+        trust_tier_at_call: str = "trusted",
     ) -> ProvenanceStamp:
         """
         Generate a provenance stamp.
@@ -198,6 +203,7 @@ class Switchboard:
             reason=reason,
             provider_statuses=provider_statuses,
             metadata=metadata,
+            trust_tier_at_call=trust_tier_at_call,
         )
 
     def get_stamp(self, stamp_id: str) -> dict | None:

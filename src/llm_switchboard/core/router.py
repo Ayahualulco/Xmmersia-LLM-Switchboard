@@ -27,6 +27,9 @@ from llm_switchboard.core.health_engine import (
 logger = logging.getLogger("llm_switchboard.router")
 
 
+_VALID_TRUST_TIERS = {"trusted", "watched", "untrusted"}
+
+
 # ── Routing Result ───────────────────────────────────────────────
 
 @dataclass
@@ -84,6 +87,11 @@ class Router:
         Returns:
             RoutingResult with the routing decision.
         """
+        # ── Trust gate: evaluated before health. Honesty before uptime. ──
+        trust_result = self._check_trust_gate(preferred_model, policy)
+        if trust_result is not None:
+            return trust_result
+
         # Assess primary model
         assessment = self._engine.assess(preferred_model)
 
@@ -217,8 +225,9 @@ class Router:
         preferred: str,
         primary_assessment: HealthAssessment,
         policy: dict,
+        refusal_reason: str | None = None,
     ) -> RoutingResult:
-        """Find the best healthy alternative model."""
+        """Find the best healthy, trust-eligible alternative model."""
         acceptable = policy.get("acceptable_models", [])
         min_status = policy.get("min_status", "healthy")
         max_latency = policy.get("max_latency_ms", None)
@@ -231,6 +240,9 @@ class Router:
 
         checked = []
         for candidate in candidates:
+            if not self._trust_allowed(candidate, policy):
+                continue  # not health-checked; excluded on trust, not availability
+
             candidate_assessment = self._engine.assess(candidate)
             checked.append(candidate)
 
@@ -250,27 +262,91 @@ class Router:
                 f"(match={match_score:.2f}, status={candidate_assessment.status.value})"
             )
 
+            reason = (
+                f"{refusal_reason}; rerouted to {candidate} (match score: {match_score:.2f})"
+                if refusal_reason else
+                f"Primary model {preferred} is {primary_assessment.status.value}; "
+                f"rerouted to {candidate} (match score: {match_score:.2f})"
+            )
             return RoutingResult(
                 routed_to=candidate,
-                reason=(
-                    f"Primary model {preferred} is {primary_assessment.status.value}; "
-                    f"rerouted to {candidate} (match score: {match_score:.2f})"
-                ),
+                reason=reason,
                 action="rerouted",
                 primary_assessment=primary_assessment,
                 alternatives_checked=checked,
             )
 
         # No alternative found
+        reason = (
+            f"{refusal_reason}; no trust-eligible healthy alternative found "
+            f"among {len(checked)} candidates"
+            if refusal_reason else
+            f"Primary model {preferred} is {primary_assessment.status.value}; "
+            f"no healthy alternative found among {len(checked)} candidates"
+        )
         return RoutingResult(
             routed_to=preferred,
-            reason=(
-                f"Primary model {preferred} is {primary_assessment.status.value}; "
-                f"no healthy alternative found among {len(checked)} candidates"
-            ),
+            reason=reason,
             action="stopped",
             primary_assessment=primary_assessment,
             alternatives_checked=checked,
+        )
+
+    # ── Trust Tier Gate ──────────────────────────────────────────
+
+    def _trust_tier(self, model_id: str) -> str:
+        """Look up a model's trust tier from providers config. Unset → 'trusted'."""
+        info = self._model_info(model_id)
+        return (info or {}).get("trust_tier", "trusted")
+
+    def _trust_allowed(self, model_id: str, policy: dict) -> bool:
+        """
+        Whether this model may be used at all under this policy's criticality,
+        independent of health. Evaluated before — and orthogonal to — the
+        health-based decision. 'Honesty before uptime.'
+        Gate table: L'Atelier llm-switchboard §06.
+        """
+        tier = self._trust_tier(model_id)
+        if tier not in _VALID_TRUST_TIERS:
+            logger.warning(
+                f"Unknown trust_tier '{tier}' for {model_id}; treating as untrusted"
+            )
+            tier = "untrusted"
+
+        if tier == "trusted":
+            return True
+
+        criticality = policy.get("criticality", "medium")
+
+        if tier == "watched":
+            return criticality != "critical"
+
+        # untrusted: refused for CAREFUL/CRITICAL outright; refused for FAST
+        # only when the call is learner-facing (default: assume it is).
+        if criticality in ("critical", "medium"):
+            return False
+        return not policy.get("learner_facing", True)
+
+    def _check_trust_gate(self, preferred: str, policy: dict) -> RoutingResult | None:
+        """Trust gate, run before the health/operational matrix. None = proceed to health check."""
+        if self._trust_allowed(preferred, policy):
+            return None
+
+        tier = self._trust_tier(preferred)
+        criticality = policy.get("criticality", "medium")
+        logger.warning(
+            f"Trust gate: {preferred} (trust_tier={tier}) refused under "
+            f"criticality={criticality} policy"
+        )
+        assessment = self._engine.assess(preferred)
+        return self._find_alternative(
+            preferred,
+            assessment,
+            policy,
+            refusal_reason=(
+                f"Primary model {preferred} has trust_tier={tier}, refused "
+                f"under criticality={criticality} policy"
+            ),
         )
 
     def _meets_min_status(self, status: HealthStatus, min_status: str) -> bool:

@@ -76,6 +76,29 @@ result = sb.route("claude-opus-4-6", policy={
 })
 ```
 
+## Trust Tiers
+
+Health tells you whether a model is *up*. Trust tells you whether it is *proven*. Switchboard checks trust **before** health — honesty before uptime — so a model that reports perfectly healthy can still be refused for high-stakes work.
+
+Each model carries a `trust_tier` in `providers.yaml` (unset means `trusted`):
+
+| Trust tier | Meaning | Refused under |
+|-----------|---------|---------------|
+| **trusted** | Proven in production. The default. | Nothing |
+| **watched** | Usable, but not yet proven enough to grade with. | CRITICAL |
+| **untrusted** | Unproven. | CRITICAL, CAREFUL, and learner-facing FAST |
+
+```yaml
+- id: "grok-build-0.1"
+  trust_tier: watched
+```
+
+A refused model reroutes to a trust-eligible alternative, or stops if there is none. Alternatives are filtered by the same rule, so a health-triggered reroute can never land on a model the policy would have refused outright.
+
+FAST carries a `learner_facing: True` field. Untrusted models are refused for learner-facing FAST calls; set `learner_facing: False` for internal tooling to allow them.
+
+Trust tiers here are assigned manually. The authoritative specification — including the weighted trust score these tiers are ultimately derived from — is the L'Atelier `llm-switchboard` document, §05 (Trust Tier) and §06 (Trust Tier Gate).
+
 ## Provenance Stamps
 
 Every routing decision produces a stamp you can attach to your output:
@@ -88,6 +111,7 @@ Every routing decision produces a stamp you can attach to your output:
     "action": "rerouted",
     "reason": "Primary model degraded during Anthropic minor outage",
     "confidence_flag": "review_recommended",
+    "trust_tier_at_call": "trusted",
     "provider_status_at_call": {
         "anthropic": "minor_outage",
         "openai": "operational"

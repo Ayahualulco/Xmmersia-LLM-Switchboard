@@ -21,6 +21,7 @@ class ModelInfo:
     capabilities: list[str] = field(default_factory=list)
     tier: str = "balanced"
     context_window: int = 100000
+    trust_tier: str = "trusted"          # trusted | watched | untrusted (static; see L'Atelier llm-switchboard §05)
 
     def has_capability(self, cap: str) -> bool:
         return cap in self.capabilities
@@ -80,6 +81,7 @@ class ModelRegistry:
                     capabilities=model_data.get("capabilities", []),
                     tier=model_data.get("tier", "balanced"),
                     context_window=model_data.get("context_window", 100000),
+                    trust_tier=model_data.get("trust_tier", "trusted"),
                 )
                 registry.register(model)
         return registry

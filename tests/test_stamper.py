@@ -116,6 +116,31 @@ class TestStamper:
         assert stamp.metadata["student_id"] == "abc123"
         assert stamp.metadata["task"] == "midterm_q3"
 
+    def test_trust_tier_at_call_defaults_to_trusted(self):
+        stamper = Stamper()
+        stamp = stamper.stamp(
+            model_requested="claude-opus-4-6",
+            model_used="claude-opus-4-6",
+            action_taken="proceed",
+            reason="Primary model is healthy",
+        )
+        assert stamp.trust_tier_at_call == "trusted"
+
+    def test_trust_tier_at_call_recorded_and_round_trips(self):
+        stamper = Stamper()
+        stamp = stamper.stamp(
+            model_requested="grok-build-0.1",
+            model_used="grok-build-0.1",
+            action_taken="proceed",
+            reason="test",
+            trust_tier_at_call="watched",
+        )
+        assert stamp.trust_tier_at_call == "watched"
+        d = stamp.to_dict()
+        assert d["trust_tier_at_call"] == "watched"
+        restored = ProvenanceStamp.from_dict(d)
+        assert restored.trust_tier_at_call == "watched"
+
     def test_storage_disabled(self):
         stamper = Stamper(storage_enabled=False)
         stamp = stamper.stamp(

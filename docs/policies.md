@@ -68,3 +68,22 @@ policy = {
 - **min_status**: Minimum health status to accept for a fallback model.
 - **max_latency_ms**: Maximum acceptable latency. Models exceeding this are skipped.
 - **notify**: Webhook URL or notification target for stop/reroute events.
+- **learner_facing**: Whether this call reaches a learner. Only consulted by the trust gate, and only for FAST. Defaults to `True` — set it `False` for internal tooling to allow untrusted models on low-criticality calls.
+
+Note that `trust_tier` is *not* a policy field. It is a property of the model, declared in `providers.yaml` (`trusted` | `watched` | `untrusted`, defaulting to `trusted`). The policy supplies the criticality; the model supplies the tier; the gate combines them.
+
+## The Trust Gate
+
+Before any of the health tables above are consulted, Switchboard checks whether the model is *trusted enough* for the policy's criticality. **Honesty before uptime.** A refused model never reaches the health table at all — it reroutes to a trust-eligible alternative, or stops.
+
+| Trust tier | FAST (learner-facing) | FAST (internal) | CAREFUL | CRITICAL |
+|-----------|----------------------|-----------------|---------|----------|
+| **trusted** | Proceed to health table | Proceed to health table | Proceed to health table | Proceed to health table |
+| **watched** | Proceed to health table | Proceed to health table | Proceed to health table | **Refused** |
+| **untrusted** | **Refused** | Proceed to health table | **Refused** | **Refused** |
+
+Fallback candidates are filtered by the same gate, so `acceptable_models` can never route you to a model the policy would have refused outright.
+
+Only `criticality: "critical"` triggers the CRITICAL column. A custom policy with `criticality: "high"` is not treated as CRITICAL-equivalent.
+
+Authoritative spec: L'Atelier `llm-switchboard` §05 (Trust Tier) and §06 (Trust Tier Gate).
