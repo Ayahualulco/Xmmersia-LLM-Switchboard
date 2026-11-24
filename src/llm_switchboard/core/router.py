@@ -239,6 +239,7 @@ class Router:
         candidates = [m for m in candidates if m != preferred]
 
         checked = []
+        viable = []
         for candidate in candidates:
             if not self._trust_allowed(candidate, policy):
                 continue  # not health-checked; excluded on trust, not availability
@@ -255,7 +256,20 @@ class Router:
                 if candidate_assessment.latency_ms > max_latency:
                     continue
 
-            # Found a viable alternative
+            viable.append((candidate, candidate_assessment))
+            if acceptable:
+                break  # caller's order: first viable wins, as before
+
+        # acceptable_models is the caller's preference order: keep it.
+        # Otherwise pick the best substitute: match score, then HEALTHY over
+        # DEGRADED (stable sort, so config order breaks remaining ties).
+        if not acceptable:
+            viable.sort(key=lambda cv: (
+                -self._match_score(preferred, cv[0]),
+                cv[1].status != HealthStatus.HEALTHY,
+            ))
+
+        for candidate, candidate_assessment in viable[:1]:
             match_score = self._match_score(preferred, candidate)
             logger.info(
                 f"Rerouting {preferred} → {candidate} "

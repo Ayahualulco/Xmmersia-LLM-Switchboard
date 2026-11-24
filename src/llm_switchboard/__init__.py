@@ -68,7 +68,7 @@ class Switchboard:
     and it tells you. What you do with that information is up to your policy.
     """
 
-    VERSION = "1.1.0"
+    VERSION = "1.1.1"
 
     def __init__(
         self,

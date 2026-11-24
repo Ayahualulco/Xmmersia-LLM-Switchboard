@@ -64,7 +64,8 @@ policy = {
 - **criticality**: How important is this task? Affects logging and notification behavior.
 - **on_degraded**: What to do when the primary model is degraded but not down.
 - **on_down**: What to do when the primary model is completely down.
-- **acceptable_models**: Ordered list of fallback models. Empty means try all known models.
+- **acceptable_models**: Ordered list of fallback models, tried in your order. Empty means try all known models, best substitute first (match score, then healthy before degraded).
+- A model with no health signal yet is reported as `unknown`, not degraded: CRITICAL stops on it, CAREFUL and FAST warn and proceed, and it is never picked as a fallback.
 - **min_status**: Minimum health status to accept for a fallback model.
 - **max_latency_ms**: Maximum acceptable latency. Models exceeding this are skipped.
 - **notify**: Webhook URL or notification target for stop/reroute events.

@@ -201,6 +201,14 @@ class HealthEngine:
         probe_signal = self._probe_signals.get(model)
         community_signal = self._community_signals.get(provider_name)
 
+        # A status page that itself reports "unknown" tells us nothing
+        if status_signal is not None and status_signal.status.lower() == "unknown":
+            status_signal = None
+
+        # No signal at all: report UNKNOWN honestly, not a 0.5 "degraded"
+        if status_signal is None and probe_signal is None and community_signal is None:
+            return self._unknown_assessment(model, provider=provider_name)
+
         # Compute composite score
         score, confidence = self._compute_score(
             status_signal, probe_signal, community_signal
@@ -333,11 +341,11 @@ class HealthEngine:
         }
         return mapping.get(status, Recommendation.CAUTION)
 
-    def _unknown_assessment(self, model: str) -> HealthAssessment:
-        """Return an unknown assessment for an unrecognized model."""
+    def _unknown_assessment(self, model: str, provider: str = "unknown") -> HealthAssessment:
+        """Return an unknown assessment (unrecognized model, or no signals yet)."""
         return HealthAssessment(
             model=model,
-            provider="unknown",
+            provider=provider,
             status=HealthStatus.UNKNOWN,
             score=0.5,
             confidence=0.1,

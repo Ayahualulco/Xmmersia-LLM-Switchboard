@@ -3,8 +3,8 @@ Tests for the Trust Tier Gate
 ══════════════════════════════
 Gate table: L'Atelier llm-switchboard §06.
 
-Note on the fixture: HealthEngine scores a model with no signals at 0.5,
-which classifies as *degraded*, not healthy. Every test here needs the
+Note on the fixture: HealthEngine reports a model with no signals as
+*unknown*, not healthy. Every test here needs the
 health axis held at "healthy" so that what it observes is the trust gate
 and nothing else — hence the explicit operational signals below.
 """

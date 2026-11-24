@@ -92,6 +92,38 @@ class TestHealthEngine:
         # No signals loaded — should be uncertain
         assert assessment.confidence <= 0.2
 
+    def test_no_signals_returns_unknown_status(self):
+        engine = HealthEngine(providers=MOCK_PROVIDERS)
+        assessment = engine.assess("claude-opus-4-6")
+        assert assessment.status == HealthStatus.UNKNOWN
+        assert assessment.recommendation == Recommendation.CAUTION
+        assert assessment.provider == "anthropic"
+        assert assessment.score == 0.5
+        assert assessment.confidence == 0.1
+
+    def test_unknown_status_page_treated_as_absent(self):
+        engine = make_engine()
+        engine.update_status_signal(
+            StatusPageSignal(provider="anthropic", status="unknown")
+        )
+        assessment = engine.assess("claude-opus-4-6")
+        assert assessment.status == HealthStatus.UNKNOWN
+
+    def test_no_signals_router_uses_unknown_branch(self):
+        from llm_switchboard.core.router import Router
+        from llm_switchboard.policies import CAREFUL, CRITICAL
+
+        engine = make_engine()
+        router = Router(health_engine=engine, providers=MOCK_PROVIDERS)
+
+        critical = router.route("claude-opus-4-6", policy=CRITICAL)
+        assert critical.action == "stopped"
+        assert "status unknown" in critical.reason
+
+        careful = router.route("claude-opus-4-6", policy=CAREFUL)
+        assert careful.action == "warned"
+        assert "status unknown" in careful.reason
+
     def test_healthy_status_page(self):
         engine = make_engine()
         engine.update_status_signal(

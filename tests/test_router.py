@@ -57,8 +57,11 @@ class TestRouterBasic:
             StatusPageSignal(provider="openai", status="operational")
         )
         result = router.route("claude-opus-4-6", policy=FAST)
-        # FAST reroutes on degraded
+        # FAST reroutes on degraded — to the best match (flagship gpt-4o on a
+        # healthy provider), not the first in config order (sonnet, same
+        # degraded provider)
         assert result.action == "rerouted"
+        assert result.routed_to == "gpt-4o"
 
     def test_degraded_model_with_careful_policy_warns(self):
         router, engine = make_router_and_engine()
